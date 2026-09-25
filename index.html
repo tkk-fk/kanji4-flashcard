@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<title>四年生の漢字 フラッシュカード</title>
+
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDMincho:wght@400;700&family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f7fafc; --ink:#1f2937; --muted:#6b7280; --card:#ffffff;
+    --accent:#2563eb; --accent-ink:#ffffff;
+    --chip:#e5e7eb; --chip-on:#dbeafe; --chip-ring:#93c5fd;
+    --radius:22px; --shadow:0 10px 30px rgba(0,0,0,.08);
+    --ui-font-stack: "BIZ UDPGothic","Noto Sans JP",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+    --kyokasho-stack:
+      "UD Digi Kyokasho N-R","UD Digi Kyokasho N-B","UD デジタル 教科書体 N-R","UD デジタル 教科書体 N-B",
+      "Yu Kyokasho","YuKyokasho","YuKyokasho Yoko","Hiragino KyoKashotai W3","Hiragino KyoKashotai W6",
+      "BIZ UDMincho","Noto Serif JP","Noto Sans JP",system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family: var(--ui-font-stack);
+    display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  .app{width:min(980px,96vw)}
+  .panel{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:18px; display:flex; flex-direction:column; gap:14px;
+  }
+  .top{ display:flex; align-items:center; justify-content:center; gap:10px; }
+  .btn{
+    appearance:none; border:none; border-radius:14px; padding:12px 18px; font-size:16px; line-height:1; cursor:pointer;
+    background:var(--chip); color:var(--ink);
+    transition:background .15s ease, color .15s ease, transform .04s ease;
+    font-family: var(--ui-font-stack);
+  }
+  .btn:active{ transform:translateY(1px) }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); }
+  .btn.switch.active{ background:var(--accent); color:var(--accent-ink); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed }
+  .sep{ flex:1 }
+
+  .sheet{ position:fixed; inset:0; background:rgba(0,0,0,.28); display:none; align-items:flex-end; justify-content:center; }
+  .sheet.show{ display:flex }
+  .sheet-inner{
+    width:min(980px,100%); max-height:80vh; overflow:auto;
+    background:var(--card); border-radius:20px 20px 0 0; box-shadow:var(--shadow);
+    padding:16px 16px 18px; display:flex; flex-direction:column; gap:12px;
+  }
+  .sheet-head{ display:flex; align-items:center; }
+  .sheet-title{ font-weight:700; }
+  .sheet-close{ margin-left:auto; background:transparent; border:none; font-size:16px; color:var(--muted); cursor:pointer; }
+  .grid{ display:grid; gap:8px; grid-template-columns: repeat(10, 1fr); }
+  @media (max-width:640px){ .grid{ grid-template-columns: repeat(8, 1fr); } }
+  .chip{
+    background:var(--chip); border:none; border-radius:12px; padding:10px 0; cursor:pointer; font-size:18px;
+    font-family: var(--kyokasho-stack);
+  }
+  .chip.on{ background:var(--chip-on); outline:3px solid var(--chip-ring); }
+  .sheet-foot{ display:flex; gap:10px; margin-top:6px; }
+  .ghost{ background:transparent; border:1px solid #cbd5e1 }
+
+  .card-wrap{ display:none; flex-direction:column; gap:10px; }
+  .backlink{ background:transparent; border:none; color:var(--muted); align-self:flex-start; cursor:pointer; padding:6px 6px; }
+  .card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding: clamp(14px, 6vw, 28px);
+    display:flex; align-items:center; justify-content:center; gap: clamp(18px, 6vw, 48px);
+    min-height: 48vh;
+    user-select:none;
+  }
+  .kanji{
+    font-family: var(--kyokasho-stack);
+    font-size: clamp(80px, 22vw, 220px);
+    line-height:1; letter-spacing: .02em;
+    font-feature-settings: "palt" 1;
+  }
+  .answer{
+    min-width: 32%; overflow-wrap:anywhere;
+    font-size: clamp(22px, 7vw, 42px);
+    color: var(--muted);
+    visibility: hidden;
+    font-family: var(--ui-font-stack);
+  }
+  .answer.show{ visibility: visible; color: var(--ink); }
+  .controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center; }
+
+  .finish{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.12); z-index:50;
+  }
+  .finish.show{ display:flex; animation: fade 1200ms ease; }
+  .finish .box{
+    background: var(--card); padding: 18px 22px; border-radius: 16px; box-shadow: var(--shadow);
+    font-weight:700; font-size: 20px; font-family: var(--ui-font-stack);
+  }
+
+  /* 送り仮名の色 */
+  .okuri{ color:#e11d48; font-weight:700; }
+  @keyframes fade{ 0%{opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{opacity:0} }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="panel" id="setup">
+      <div class="top" aria-hidden="true" style="justify-content:center; font-weight:700;">四年生の漢字 フラッシュカード</div>
+      <div class="controls" style="justify-content:center;">
+        <button class="btn switch" id="allBtn" aria-label="ぜんぶ">ぜんぶ</button>
+        <button class="btn switch" id="pickBtn" aria-label="えらぶ">えらぶ</button>
+        <button class="btn switch" id="randomBtn" aria-label="ランダム20問">ランダム20問</button>
+        <span class="sep"></span>
+        <button class="btn primary" id="startBtn">スタート</button>
+      </div>
+    </div>
+
+    <div class="card-wrap" id="play">
+      <button class="backlink" id="backBtn">← もどる</button>
+      <div class="card" id="card" role="button" tabindex="0" aria-label="カードをタップ。Enterキーまたはスペースキーでも操作できます">
+        <div class="kanji" id="q"></div>
+        <div class="answer" id="a"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet" aria-modal="true" role="dialog">
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <div class="sheet-title">漢字をえらぶ</div>
+        <button class="sheet-close" id="closeSheet">とじる ✕</button>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="sheet-foot">
+        <button class="btn ghost" id="clearBtn">全解除</button>
+        <span class="sep"></span>
+        <button class="btn primary" id="okBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="finish" id="finish">
+    <div class="box">がんばったね😊</div>
+  </div>
+
+<script>
+/* ---------- 表示ユーティリティ（送り仮名を赤に） ---------- */
+function formatReading(text){
+  if(!text) return "";
+  return text
+    .split("・")
+    .map(t => t.replace(/\(([^)]+)\)/g, '<span class="okuri">$1</span>'))
+    .join("・");
+}
+
+/* ---------- データ ---------- */
+// 小学四年生（202字・2020年度学習指導要領 学年別漢字配当表の順）
+const KANJI_LIST = [
+  "愛","案","以","衣","位","茨","印","英","栄","媛",
+  "塩","岡","億","加","果","貨","課","芽","賀","改",
+  "械","害","街","各","覚","潟","完","官","管","関",
+  "観","願","岐","希","季","旗","器","機","議","求",
+  "泣","給","挙","漁","共","協","鏡","競","極","熊",
+  "訓","軍","郡","群","径","景","芸","欠","結","建",
+  "健","験","固","功","好","香","候","康","佐","差",
+  "菜","最","埼","材","崎","昨","札","刷","察","参",
+  "産","散","残","氏","司","試","児","治","滋","辞",
+  "鹿","失","借","種","周","祝","順","初","松","笑",
+  "唱","焼","照","城","縄","臣","信","井","成","省",
+  "清","静","席","積","折","節","説","浅","戦","選",
+  "然","争","倉","巣","束","側","続","卒","孫","帯",
+  "隊","達","単","置","仲","沖","兆","低","底","的",
+  "典","伝","徒","努","灯","働","特","徳","栃","奈",
+  "梨","熱","念","敗","梅","博","阪","飯","飛","必",
+  "票","標","不","夫","付","府","阜","富","副","兵",
+  "別","辺","変","便","包","法","望","牧","末","満",
+  "未","民","無","約","勇","要","養","浴","利","陸",
+  "良","料","量","輪","類","令","冷","例","連","老",
+  "労","録"
+];
+
+// 読み（()内＝送り仮名を赤表示）
+const READINGS = {
+  "愛":"あい",
+  "案":"あん",
+  "以":"い",
+  "衣":"ころも・い",
+  "位":"くらい・い",
+  "茨":"いばら・いばらき（茨城）",
+  "印":"しるし・いん",
+  "英":"えい",
+  "栄":"さか(える)・は(える)・えい",
+  "媛":"えん・えひめ（愛媛）",
+  "塩":"しお・えん",
+  "岡":"おか・おかやま（岡山）",
+  "億":"おく",
+  "加":"くわ(える)・か",
+  "果":"は(たす)・か",
+  "貨":"か",
+  "課":"か",
+  "芽":"め・が",
+  "賀":"が・さが（佐賀）",
+  "改":"あらた(める)・かい",
+  "械":"かい",
+  "害":"がい",
+  "街":"まち・がい",
+  "各":"おのおの・かく",
+  "覚":"おぼ(える)・さ(める)・かく",
+  "潟":"かた・にいがた（新潟）",
+  "完":"かん",
+  "官":"かん",
+  "管":"くだ・かん",
+  "関":"せき・かか(わる)・かん",
+  "観":"かん",
+  "願":"ねが(う)・がん",
+  "岐":"き・ぎふ（岐阜）",
+  "希":"き",
+  "季":"き",
+  "旗":"はた・き",
+  "器":"うつわ・き",
+  "機":"はた・き",
+  "議":"ぎ",
+  "求":"もと(める)・きゅう",
+  "泣":"な(く)・きゅう",
+  "給":"きゅう",
+  "挙":"あ(げる)・きょ",
+  "漁":"ぎょ・りょう",
+  "共":"とも・きょう",
+  "協":"きょう",
+  "鏡":"かがみ・きょう",
+  "競":"きそ(う)・せ(る)・きょう・けい",
+  "極":"きわ(める)・きょく・ごく",
+  "熊":"くま・くまもと（熊本）",
+  "訓":"くん",
+  "軍":"ぐん",
+  "郡":"ぐん",
+  "群":"む(れる)・ぐん",
+  "径":"けい",
+  "景":"けい",
+  "芸":"げい",
+  "欠":"か(ける)・けつ",
+  "結":"むす(ぶ)・ゆ(う)・けつ",
+  "建":"た(てる)・けん",
+  "健":"すこ(やか)・けん",
+  "験":"けん",
+  "固":"かた(い)・こ",
+  "功":"こう",
+  "好":"この(む)・す(き)・こう",
+  "香":"かお(り)・か・こう・かがわ（香川）",
+  "候":"こう",
+  "康":"こう",
+  "佐":"さ・さが（佐賀）",
+  "差":"さ(す)・さ",
+  "菜":"な・さい",
+  "最":"もっと(も)・さい",
+  "埼":"さい・さいたま（埼玉）",
+  "材":"ざい",
+  "崎":"さき・ながさき（長崎）",
+  "昨":"さく",
+  "札":"ふだ・さつ",
+  "刷":"す(る)・さつ",
+  "察":"さつ",
+  "参":"まい(る)・さん",
+  "産":"う(む)・さん",
+  "散":"ち(る)・さん",
+  "残":"のこ(る)・ざん",
+  "氏":"うじ・し",
+  "司":"し",
+  "試":"ため(す)・こころ(みる)・し",
+  "児":"じ・に",
+  "治":"おさ(める)・なお(す)・じ・ち",
+  "滋":"じ・しが（滋賀）",
+  "辞":"や(める)・じ",
+  "鹿":"しか・か・かごしま（鹿児島）",
+  "失":"うしな(う)・しつ",
+  "借":"か(りる)・しゃく",
+  "種":"たね・しゅ",
+  "周":"まわ(り)・しゅう",
+  "祝":"いわ(う)・しゅく",
+  "順":"じゅん",
+  "初":"はじ(め)・はつ・しょ",
+  "松":"まつ・しょう",
+  "笑":"わら(う)・え(む)・しょう",
+  "唱":"とな(える)・しょう",
+  "焼":"や(く)・しょう",
+  "照":"て(る)・て(らす)・しょう",
+  "城":"しろ・じょう・いばらき（茨城）",
+  "縄":"なわ・じょう・おきなわ（沖縄）",
+  "臣":"しん・じん",
+  "信":"しん",
+  "井":"い・せい・ふくい（福井）",
+  "成":"な(る)・せい",
+  "省":"はぶ(く)・かえり(みる)・せい・しょう",
+  "清":"きよ(い)・せい",
+  "静":"しず(か)・せい",
+  "席":"せき",
+  "積":"つ(む)・せき",
+  "折":"お(る)・せつ",
+  "節":"ふし・せつ",
+  "説":"と(く)・せつ",
+  "浅":"あさ(い)・せん",
+  "戦":"たたか(う)・いくさ・せん",
+  "選":"えら(ぶ)・せん",
+  "然":"ぜん・ねん",
+  "争":"あらそ(う)・そう",
+  "倉":"くら・そう",
+  "巣":"す・そう",
+  "束":"たば・そく",
+  "側":"がわ・そく",
+  "続":"つづ(く)・ぞく",
+  "卒":"そつ",
+  "孫":"まご・そん",
+  "帯":"おび・お(びる)・たい",
+  "隊":"たい",
+  "達":"たつ",
+  "単":"たん",
+  "置":"お(く)・ち",
+  "仲":"なか・ちゅう",
+  "沖":"おき・ちゅう・おきなわ（沖縄）",
+  "兆":"きざ(し)・ちょう",
+  "低":"ひく(い)・てい",
+  "底":"そこ・てい",
+  "的":"まと・てき",
+  "典":"てん",
+  "伝":"つた(える)・でん",
+  "徒":"と",
+  "努":"つと(める)・ど",
+  "灯":"ひ・とう",
+  "働":"はたら(く)・どう",
+  "特":"とく",
+  "徳":"とく",
+  "栃":"とち・とちぎ（栃木）",
+  "奈":"な・なら（奈良）",
+  "梨":"なし・やまなし（山梨）",
+  "熱":"あつ(い)・ねつ",
+  "念":"ねん",
+  "敗":"やぶ(れる)・はい",
+  "梅":"うめ・ばい",
+  "博":"はく・ばく",
+  "阪":"はん・おおさか（大阪）",
+  "飯":"めし・はん",
+  "飛":"と(ぶ)・ひ",
+  "必":"かなら(ず)・ひつ",
+  "票":"ひょう",
+  "標":"ひょう",
+  "不":"ふ・ぶ",
+  "夫":"おっと・ふ・ふう",
+  "付":"つ(ける)・ふ",
+  "府":"ふ",
+  "阜":"ふ・ぎふ（岐阜）",
+  "富":"とみ・と(む)・ふ・ふう・とやま（富山）",
+  "副":"ふく",
+  "兵":"へい・ひょう",
+  "別":"わか(れる)・べつ",
+  "辺":"あた(り)・べ・へん",
+  "変":"か(わる)・へん",
+  "便":"たよ(り)・べん・びん",
+  "包":"つつ(む)・ほう",
+  "法":"ほう",
+  "望":"のぞ(む)・ぼう・もう",
+  "牧":"まき・ぼく",
+  "末":"すえ・まつ",
+  "満":"み(ちる)・まん",
+  "未":"み",
+  "民":"たみ・みん",
+  "無":"な(い)・む・ぶ",
+  "約":"やく",
+  "勇":"いさ(む)・ゆう",
+  "要":"かなめ・い(る)・よう",
+  "養":"やしな(う)・よう",
+  "浴":"あ(びる)・よく",
+  "利":"き(く)・り",
+  "陸":"りく",
+  "良":"よ(い)・りょう",
+  "料":"りょう",
+  "量":"はか(る)・りょう",
+  "輪":"わ・りん",
+  "類":"たぐ(い)・るい",
+  "令":"れい",
+  "冷":"つめ(たい)・ひ(える)・れい",
+  "例":"たと(える)・れい",
+  "連":"つ(れる)・れん",
+  "老":"お(いる)・ろう",
+  "労":"ろう",
+  "録":"ろく"
+};
+
+/* ---------- 状態 ---------- */
+let picked = [];
+let order = [];
+let idx = 0;
+let showAns = false;
+let mode = null;
+
+/* ---------- 要素参照 ---------- */
+const setup = document.getElementById('setup');
+const play = document.getElementById('play');
+const qEl = document.getElementById('q');
+const aEl = document.getElementById('a');
+const card = document.getElementById('card');
+
+const allBtn = document.getElementById('allBtn');
+const pickBtn = document.getElementById('pickBtn');
+const randomBtn = document.getElementById('randomBtn');
+const startBtn = document.getElementById('startBtn');
+const backBtn = document.getElementById('backBtn');
+
+const sheet = document.getElementById('sheet');
+const grid = document.getElementById('grid');
+const okBtn = document.getElementById('okBtn');
+const clearBtn = document.getElementById('clearBtn');
+const closeSheet = document.getElementById('closeSheet');
+
+const finish = document.getElementById('finish');
+
+/* ---------- 初期化 ---------- */
+updateStartEnable();
+setActiveButtons();
+
+/* ---------- ハンドラ ---------- */
+allBtn.addEventListener('click', ()=>{
+  picked = [...KANJI_LIST];
+  mode = 'all'; setActiveButtons(); flashPickToast(); updateStartEnable();
+});
+pickBtn.addEventListener('click', ()=>{
+  if(mode !== 'pick') picked = [];
+  mode = 'pick'; setActiveButtons(); openPicker();
+});
+randomBtn.addEventListener('click', ()=>{
+  picked = sampleUnique(KANJI_LIST, 20);
+  mode = 'random20'; setActiveButtons(); flashPickToast(); updateStartEnable();
+});
+startBtn.addEventListener('click', ()=>{
+  if(mode === 'pick' && picked.length===0){ openPicker(); return; }
+  if(picked.length===0){ picked = [...KANJI_LIST]; mode='all'; setActiveButtons(); }
+  begin();
+});
+backBtn.addEventListener('click', ()=>{ endAndReturn(); });
+
+/* カード操作 */
+card.addEventListener('click', nextOrReveal);
+card.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); nextOrReveal(); }
+});
+
+/* 矢印キー（→で答え→次へ、←で戻る） */
+window.addEventListener('keydown', (e)=>{
+  if (!isPlaying() || sheet.classList.contains('show')) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') e.preventDefault();
+  if (e.key === 'ArrowRight') nextOrReveal();
+  if (e.key === 'ArrowLeft') prevOne();
+});
+
+/* ---------- ピッカー ---------- */
+function openPicker(){
+  if(!grid.dataset.ready){
+    const frag = document.createDocumentFragment();
+    KANJI_LIST.forEach(k=>{
+      const b = document.createElement('button');
+      b.className = 'chip'; b.textContent = k; b.type='button';
+      b.addEventListener('click', ()=> b.classList.toggle('on'));
+      frag.appendChild(b);
+    });
+    grid.appendChild(frag); grid.dataset.ready = '1';
+  }
+  Array.from(grid.children).forEach(chip=> chip.classList.toggle('on', picked.includes(chip.textContent)));
+  sheet.classList.add('show'); document.body.style.overflow='hidden';
+}
+closeSheet.addEventListener('click', closePicker);
+sheet.addEventListener('click', e=>{ if(e.target === sheet) closePicker(); });
+window.addEventListener('keydown', e=>{ if(e.key === 'Escape' && sheet.classList.contains('show')) closePicker(); });
+okBtn.addEventListener('click', ()=>{
+  picked = Array.from(grid.children).filter(el=>el.classList.contains('on')).map(el=>el.textContent);
+  updateStartEnable(); closePicker();
+});
+clearBtn.addEventListener('click', ()=>{ Array.from(grid.children).forEach(el=>el.classList.remove('on')); });
+function closePicker(){ sheet.classList.remove('show'); document.body.style.overflow=''; }
+
+/* ---------- ゲームフロー ---------- */
+function begin(){
+  order = picked.map(k => KANJI_LIST.indexOf(k)).filter(i=>i>=0);
+  if(mode === 'random20'){ shuffle(order); }
+  idx = 0; setup.style.display = 'none'; play.style.display = 'flex'; showQuestion();
+}
+function showQuestion(){
+  const k = KANJI_LIST[order[idx]];
+  qEl.textContent = k;
+  aEl.innerHTML  = formatReading(READINGS[k] || "（よみ未設定）");
+  showAns = false; aEl.classList.remove('show');
+}
+function nextOrReveal(){
+  if(!showAns){ showAns = true; aEl.classList.add('show'); return; }
+  if(idx + 1 >= order.length){ finishRound(); }
+  else{ idx++; showQuestion(); }
+}
+function prevOne(){
+  if(idx === 0) return;
+  idx--; showQuestion();
+}
+function finishRound(){
+  finish.classList.add('show');
+  setTimeout(()=>{ finish.classList.remove('show'); endAndReturn(); }, 1200);
+}
+function endAndReturn(){
+  play.style.display = 'none'; setup.style.display = '';
+  idx = 0; showAns = false; aEl.classList.remove('show');
+  mode = null; setActiveButtons();
+}
+
+/* ---------- ヘルパー ---------- */
+function setActiveButtons(){
+  allBtn.classList.toggle('active', mode==='all');
+  pickBtn.classList.toggle('active', mode==='pick');
+  randomBtn.classList.toggle('active', mode==='random20');
+}
+function flashPickToast(){
+  (mode==='random20' ? randomBtn : allBtn).animate(
+    [{transform:'scale(1)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],
+    {duration:220}
+  );
+}
+function updateStartEnable(){ startBtn.disabled = false; }
+function isPlaying(){ return play.style.display === 'flex'; }
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+function sampleUnique(source, n){
+  const copy = [...source];
+  shuffle(copy);
+  return copy.slice(0, Math.min(n, copy.length));
+}
+</script>
+</body>
+</html>
