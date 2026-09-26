@@ -82,6 +82,7 @@
     display:flex;align-items:center;justify-content:flex-start;gap:10px;
   }
   .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  .seg.two{grid-template-columns:repeat(2,1fr);}
   .opt{
     font-family:"Zen Maru Gothic",sans-serif;font-weight:700;
     font-size:clamp(13px,3.6vw,16px);color:var(--ink);
@@ -92,6 +93,38 @@
   .opt:active{transform:scale(.97);}
   .opt[aria-pressed="true"]{background:var(--blue);border-color:var(--blue-d);}
   .opt:focus-visible{outline:3px solid var(--purple-d);outline-offset:2px;}
+  /* もんだいの かず（スライダー） */
+  .count-num{
+    font-family:"Zen Maru Gothic",sans-serif;font-weight:700;
+    font-size:clamp(26px,7.4vw,34px);line-height:1;color:var(--ink);
+    min-width:2.2em;text-align:right;
+  }
+  .range{
+    -webkit-appearance:none;appearance:none;display:block;
+    width:100%;height:48px;margin:0;padding:0 2px;background:transparent;
+    cursor:pointer;touch-action:manipulation;--p:10%;
+  }
+  .range:focus{outline:none;}
+  .range:focus-visible{outline:3px solid var(--purple-d);outline-offset:2px;border-radius:14px;}
+  .range::-webkit-slider-runnable-track{
+    height:14px;border-radius:999px;
+    background:linear-gradient(to right,var(--blue-d) 0,var(--blue-d) var(--p),#E6DCC8 var(--p),#E6DCC8 100%);
+  }
+  .range::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:38px;height:38px;margin-top:-12px;
+    border-radius:50%;background:var(--card);border:4px solid var(--blue-d);
+    box-shadow:0 3px 0 rgba(120,100,70,.18);
+  }
+  .range::-moz-range-track{height:14px;border-radius:999px;background:#E6DCC8;}
+  .range::-moz-range-progress{height:14px;border-radius:999px;background:var(--blue-d);}
+  .range::-moz-range-thumb{
+    width:30px;height:30px;border-radius:50%;background:var(--card);border:4px solid var(--blue-d);
+    box-shadow:0 3px 0 rgba(120,100,70,.18);
+  }
+  .range-scale{
+    display:flex;justify-content:space-between;
+    font-size:clamp(11.5px,3.1vw,13px);color:var(--ink-soft);padding:0 6px;
+  }
   .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:7px;}
   .opt.k{
     font-family:var(--kyokasho);font-weight:600;
@@ -123,6 +156,16 @@
   }
   .back-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--purple-d);}
   .back-btn:focus-visible{outline:3px solid var(--purple-d);outline-offset:2px;}
+  .pause-btn{
+    font-family:"Zen Maru Gothic",sans-serif;font-weight:700;color:var(--ink);
+    background:var(--yellow);border:none;border-radius:999px;
+    padding:10px 17px;min-height:44px;font-size:clamp(13px,3.5vw,15px);cursor:pointer;
+    box-shadow:0 4px 0 var(--yellow-d);
+  }
+  .pause-btn[hidden]{display:none;}
+  .pause-btn[aria-pressed="true"]{background:var(--green);box-shadow:0 4px 0 var(--green-d);}
+  .pause-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--yellow-d);}
+  .pause-btn:focus-visible{outline:3px solid var(--purple-d);outline-offset:2px;}
   .counter{
     font-family:"Zen Maru Gothic",sans-serif;font-weight:500;
     color:var(--ink-soft);font-size:clamp(13px,3.6vw,16px);margin:0;
@@ -157,6 +200,7 @@
     font-size:clamp(24px,7vw,40px);line-height:1.5;
     max-width:100%;overflow-wrap:anywhere;
   }
+  .reading .r{white-space:nowrap;}
   .reading .sep{color:#C9BCA6;margin:0 .15em;}
   .reading .okuri{color:var(--okuri);}
   .sub{
@@ -193,9 +237,30 @@
       <div class="seg" id="segMode">
         <button class="opt" data-mode="all" aria-pressed="false">ぜんぶ</button>
         <button class="opt" data-mode="pick" aria-pressed="false">えらぶ</button>
-        <button class="opt" data-mode="random20" aria-pressed="false">ランダム20問</button>
+        <button class="opt" data-mode="random" aria-pressed="false">ランダム</button>
       </div>
       <p class="help" id="modeHelp">だしかたを えらんで ください。</p>
+    </div>
+
+    <div class="group" id="groupRandom" hidden>
+      <h2>もんだいの かず <span class="count-num" id="countNum">20</span>もん</h2>
+      <input class="range" type="range" id="countRange" min="0" max="1000" step="1" value="0" aria-label="もんだいの かず">
+      <div class="range-scale"><span>1</span><span id="countMax">202</span></div>
+    </div>
+
+    <div class="group">
+      <h2>すすめかた</h2>
+      <div class="seg two" id="segAuto">
+        <button class="opt" data-auto="tap" aria-pressed="true">タップ</button>
+        <button class="opt" data-auto="auto" aria-pressed="false">じどう</button>
+      </div>
+      <p class="help" id="autoHelp">タップして めくります。</p>
+    </div>
+
+    <div class="group" id="groupSec" hidden>
+      <h2>びょうすう <span class="count-num" id="secNum">2</span>びょう</h2>
+      <input class="range" type="range" id="secRange" min="1" max="10" step="0.5" value="2" aria-label="びょうすう">
+      <div class="range-scale"><span>1</span><span>10</span></div>
     </div>
 
     <div class="group" id="groupPick" hidden>
@@ -215,6 +280,7 @@
 <div class="screen" id="screenCard" hidden>
   <div class="bar">
     <button class="back-btn" id="btnBack">← もどる</button>
+    <button class="pause-btn" id="btnPause" aria-pressed="false" hidden>とめる</button>
     <p class="counter" id="counter">1 / 20</p>
   </div>
 
@@ -489,12 +555,17 @@
 
   /* ============ 状態 ============ */
   var state = {
-    mode: null,      /* all | pick | random20 */
+    mode: null,      /* all | pick | random */
+    count: 20,       /* ランダムの もんだいの かず（1〜ぜんぶ） */
     picked: [],      /* えらぶ で選んだ漢字 */
     deck: [],
     pos: 0,
-    flipped: false
+    flipped: false,
+    auto: 0,         /* いまの びょうすう（0＝タップ） */
+    sec: 2,          /* じどうの びょうすう（1〜10、0.5きざみ） */
+    paused: false
   };
+  var timer = null;  /* じどうの タイマー（setTimeout を1つだけ） */
 
   /* ============ 純粋ロジック ============ */
   function shuffleArr(arr, rnd) {
@@ -513,17 +584,43 @@
     return KANJI_LIST.filter(function (k) { return chars.indexOf(k) !== -1; });
   }
 
-  function buildDeck(mode, picked, rnd) {
+  var SEC_MIN = 1, SEC_MAX = 10;
+  /* 0.5びょう きざみに そろえる */
+  function clampSec(n) {
+    n = Math.round(Number(n) * 2) / 2;
+    if (!isFinite(n)) n = 2;
+    return Math.max(SEC_MIN, Math.min(SEC_MAX, n));
+  }
+
+  /* ランダムの かず：1〜ぜんぶ の整数にそろえる */
+  function clampCount(n) {
+    n = Math.round(Number(n));
+    if (!isFinite(n)) n = 20;
+    return Math.max(1, Math.min(KANJI_LIST.length, n));
+  }
+
+  /* スライダーの位置(0〜1000) ⇔ かず。すくない かずほど 目もりを ひろくして 合わせやすくする */
+  var POS_MAX = 1000;
+  function countFromPos(pos) {
+    var t = Math.max(0, Math.min(POS_MAX, Number(pos) || 0)) / POS_MAX;
+    return clampCount(1 + (KANJI_LIST.length - 1) * t * t);
+  }
+  function posFromCount(n) {
+    var t = Math.sqrt((clampCount(n) - 1) / Math.max(1, KANJI_LIST.length - 1));
+    return Math.round(t * POS_MAX);
+  }
+
+  function buildDeck(mode, picked, rnd, count) {
     if (mode === "all") return KANJI_LIST.slice();
     if (mode === "pick") return inListOrder(picked);
-    if (mode === "random20") return shuffleArr(KANJI_LIST, rnd).slice(0, 20);
+    if (mode === "random") return shuffleArr(KANJI_LIST, rnd).slice(0, clampCount(count));
     return [];
   }
 
-  function deckSize(mode, picked) {
+  function deckSize(mode, picked, count) {
     if (mode === "all") return KANJI_LIST.length;
     if (mode === "pick") return inListOrder(picked).length;
-    if (mode === "random20") return Math.min(20, KANJI_LIST.length);
+    if (mode === "random") return clampCount(count);
     return 0;
   }
 
@@ -543,11 +640,12 @@
     });
   }
 
-  /* ( ) の中＝送り仮名を赤に */
+  /* ( ) の中＝送り仮名を赤に。読みの途中では改行せず、「・」の後で折り返す */
   function readingHtml(list) {
     return list.map(function (p) {
-      return escapeHtml(p).replace(/\(([^)]+)\)/g, '<span class="okuri">$1</span>');
-    }).join('<span class="sep">・</span>');
+      return '<span class="r">' +
+        escapeHtml(p).replace(/\(([^)]+)\)/g, '<span class="okuri">$1</span>') + '</span>';
+    }).join('<span class="sep">・</span><wbr>');
   }
 
   /* ============ DOM ============ */
@@ -555,6 +653,7 @@
   var elCard = $("card");
 
   function show(name) {
+    if (name !== "card") clearTimer();
     $("screenSetup").hidden = (name !== "setup");
     $("screenCard").hidden  = (name !== "card");
     $("screenDone").hidden  = (name !== "done");
@@ -577,7 +676,14 @@
     }
     $("counter").textContent = (state.pos + 1) + " / " + state.deck.length;
     elCard.classList.toggle("flipped", state.flipped);
-    $("hint").textContent = state.flipped ? "タップで つぎへ" : "タップして よみ";
+    if (state.auto) {
+      $("hint").textContent = state.paused ? "とまっています（タップで すすみます）" : "じどうで すすみます";
+    } else {
+      $("hint").textContent = state.flipped ? "タップで つぎへ" : "タップして よみ";
+    }
+    $("btnPause").hidden = !state.auto;
+    $("btnPause").textContent = state.paused ? "うごかす" : "とめる";
+    $("btnPause").setAttribute("aria-pressed", state.paused ? "true" : "false");
     elCard.setAttribute("aria-label", state.flipped ? "よみ" : "もんだい");
   }
 
@@ -587,6 +693,27 @@
       modes[i].setAttribute("aria-pressed", modes[i].getAttribute("data-mode") === state.mode ? "true" : "false");
     }
     $("groupPick").hidden = (state.mode !== "pick");
+    $("groupRandom").hidden = (state.mode !== "random");
+    var range = $("countRange");
+    if (countFromPos(range.value) !== state.count) range.value = String(posFromCount(state.count));
+    range.style.setProperty("--p", (Number(range.value) / POS_MAX * 100) + "%");
+    range.setAttribute("aria-valuetext", state.count + "もん");
+    $("countNum").textContent = state.count;
+
+    var autos = document.querySelectorAll("[data-auto]");
+    for (var a = 0; a < autos.length; a++) {
+      var isAuto = autos[a].getAttribute("data-auto") === "auto";
+      autos[a].setAttribute("aria-pressed", (isAuto === !!state.auto) ? "true" : "false");
+    }
+    $("groupSec").hidden = !state.auto;
+    var sr = $("secRange");
+    if (Number(sr.value) !== state.sec) sr.value = String(state.sec);
+    sr.style.setProperty("--p", ((state.sec - SEC_MIN) / (SEC_MAX - SEC_MIN) * 100) + "%");
+    sr.setAttribute("aria-valuetext", state.sec + "びょう");
+    $("secNum").textContent = state.sec;
+    $("autoHelp").textContent = state.auto
+      ? "もんだい → " + state.auto + "びょう → こたえ → " + state.auto + "びょう → つぎの もんだい"
+      : "タップして めくります。";
 
     var chips = $("kgrid").children;
     for (var j = 0; j < chips.length; j++) {
@@ -594,28 +721,50 @@
       chips[j].setAttribute("aria-pressed", on ? "true" : "false");
     }
 
+    var total = KANJI_LIST.length;
     var help = {
-      all: "202字を じゅんばんに だします。",
+      all: total + "字を じゅんばんに だします。",
       pick: "れんしゅうしたい 漢字を タップして えらびます。",
-      random20: "202字の中から 20字を ランダムに だします。"
+      random: total + "字の中から " + state.count + "字を ランダムに だします。"
     };
     $("modeHelp").textContent = state.mode ? help[state.mode] : "だしかたを えらんで ください。";
 
-    var n = deckSize(state.mode, state.picked);
+    var n = deckSize(state.mode, state.picked, state.count);
     $("btnStart").disabled = (n === 0);
     if (!state.mode) $("summary").textContent = "だしかたを えらんで ください";
     else if (n === 0) $("summary").textContent = "漢字を えらんで ください";
-    else $("summary").textContent = "ぜんぶで " + n + "まい";
+    else $("summary").textContent = "ぜんぶで " + n + "まい" + (state.auto ? "（" + state.auto + "びょうで じどう）" : "");
   }
 
   function start() {
-    var deck = buildDeck(state.mode, state.picked);
+    var deck = buildDeck(state.mode, state.picked, null, state.count);
     if (!deck.length) return;
     state.deck = deck;
     state.pos = 0;
     state.flipped = false;
+    state.paused = false;
     render();
     show("card");
+    schedule();
+  }
+
+  /* ============ じどう ============ */
+  function clearTimer() {
+    if (timer !== null) { clearTimeout(timer); timer = null; }
+  }
+
+  /* いまのカードから かぞえなおす（タップや もどる のあとも同じ間かく） */
+  function schedule() {
+    clearTimer();
+    if (!state.auto || state.paused || !state.deck.length || $("screenCard").hidden) return;
+    timer = setTimeout(function () { timer = null; advance(); }, state.auto * 1000);
+  }
+
+  function togglePause() {
+    if (!state.auto || $("screenCard").hidden) return;
+    state.paused = !state.paused;
+    render();
+    schedule();
   }
 
   function finish() {
@@ -634,6 +783,7 @@
       state.flipped = true;
     }
     render();
+    schedule();
   }
 
   function goBack() {
@@ -641,9 +791,13 @@
     if (state.flipped) { state.flipped = false; }
     else if (state.pos > 0) { state.pos -= 1; state.flipped = false; }
     render();
+    schedule();
   }
 
   /* ============ 漢字の一覧 ============ */
+  $("countRange").value = String(posFromCount(state.count));
+  $("countMax").textContent = KANJI_LIST.length;
+
   (function buildGrid() {
     var frag = document.createDocumentFragment();
     KANJI_LIST.forEach(function (k) {
@@ -666,6 +820,53 @@
     if (m === "pick" && state.mode !== "pick") state.picked = [];
     state.mode = m;
     updateSetup();
+    if (m === "random") reveal($("groupRandom"));
+  });
+
+  /* 小さい画面で、あらわれた スライダーが かくれないように */
+  function reveal(el) {
+    if (!el || el.hidden || !el.scrollIntoView) return;
+    try { el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {}
+  }
+
+  $("segAuto").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-auto]");
+    if (!b) return;
+    state.auto = (b.getAttribute("data-auto") === "auto") ? state.sec : 0;
+    updateSetup();
+    if (state.auto) reveal($("groupSec"));
+  });
+
+  $("secRange").addEventListener("input", function () {
+    state.sec = clampSec(this.value);
+    if (state.auto) state.auto = state.sec;
+    updateSetup();
+  });
+
+  $("btnPause").addEventListener("click", togglePause);
+
+  $("countRange").addEventListener("input", function () {
+    state.count = countFromPos(this.value);
+    updateSetup();
+  });
+  /* やじるしキーは 1もんずつ */
+  $("countRange").addEventListener("keydown", function (e) {
+    var d = (e.key === "ArrowRight" || e.key === "ArrowUp") ? 1 :
+            (e.key === "ArrowLeft" || e.key === "ArrowDown") ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    state.count = clampCount(state.count + d);
+    this.value = String(posFromCount(state.count));
+    updateSetup();
+  });
+
+  /* ほかのアプリに切り替えたら じどうを とめる */
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden && state.auto && !state.paused && !$("screenCard").hidden) {
+      state.paused = true;
+      render();
+      clearTimer();
+    }
   });
 
   $("kgrid").addEventListener("click", function (e) {
@@ -707,7 +908,8 @@
   /* テスト用（UIには影響しません） */
   window.__tkk = {
     KANJI_LIST: KANJI_LIST, READINGS: READINGS, state: state,
-    buildDeck: buildDeck, deckSize: deckSize, shuffleArr: shuffleArr,
+    getTimer: function () { return timer; },
+    buildDeck: buildDeck, deckSize: deckSize, clampCount: clampCount, clampSec: clampSec, countFromPos: countFromPos, posFromCount: posFromCount, shuffleArr: shuffleArr,
     splitReading: splitReading, readingHtml: readingHtml
   };
 })();
